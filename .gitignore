@@ -1,0 +1,7 @@
+bin/
+obj/
+var/
+.vs/
+*.user
+**/Properties/launchSettings.json
+
