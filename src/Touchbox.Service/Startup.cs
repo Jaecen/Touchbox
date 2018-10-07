@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.WebSockets;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -27,8 +31,27 @@ namespace Touchbox.Service
 
 			app.Run(async (context) =>
 			{
-				await context.Response.WriteAsync("Hello World!");
+				if(!context.WebSockets.IsWebSocketRequest)
+				{
+					context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+					return;
+				}
+
+				var webSocket = await context.WebSockets.AcceptWebSocketAsync();
+				await Time(context, webSocket);
 			});
+		}
+
+		public async Task Time(HttpContext context, WebSocket webSocket)
+		{
+			var receiveBuffer = new byte[1024];
+
+			var receiveResult = await webSocket.ReceiveAsync(receiveBuffer, CancellationToken.None);
+
+			var sendBuffer = Encoding.UTF8.GetBytes(DateTimeOffset.Now.ToString("o"));
+			await webSocket.SendAsync(sendBuffer, WebSocketMessageType.Text, true, CancellationToken.None);
+
+			await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Bye", CancellationToken.None);
 		}
 	}
 }

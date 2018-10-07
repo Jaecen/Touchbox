@@ -4,18 +4,18 @@ import AddIcon from '@material-ui/icons/Add';
 import RemoveIcon from '@material-ui/icons/Remove';
 import ClearIcon from '@material-ui/icons/Clear';
 
-const Counter = () => (
+const Counter = ({ value, incrementValue, decrementValue, clearValue }) => (
 	<div>
 		<div>
-		0
+			{value}
 		</div>
-		<Button variant="contained" color="primary">
+		<Button variant="contained" color="primary" onClick={incrementValue}>
 			<AddIcon />
 		</Button>
-		<Button variant="contained" color="secondary">
+		<Button variant="contained" color="secondary" onClick={decrementValue}>
 			<RemoveIcon />
 		</Button>
-		<Button variant="contained" color="default">
+		<Button variant="contained" color="default" onClick={clearValue}>
 			<ClearIcon />
 		</Button>
 	</div>
