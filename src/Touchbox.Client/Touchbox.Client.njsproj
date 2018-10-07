@@ -37,7 +37,6 @@
     <Content Include="public\favicon.ico" />
     <Content Include="public\index.html" />
     <Content Include="public\manifest.json" />
-    <Content Include="README.md" />
     <Content Include="src\App.css" />
     <Content Include="src\index.css" />
     <Content Include="src\logo.svg" />
