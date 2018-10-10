@@ -8,9 +8,13 @@ import createSagaMiddleware from 'redux-saga';
 import reducer from './reducers';
 import { valueSaga } from './actions';
 
+import { init } from './eventApi';
+
 import './index.css';
 import App from './component/App';
 import * as serviceWorker from './serviceWorker';
+
+init('ws://localhost:18954');
 
 const sagaMiddleware = createSagaMiddleware();
 const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;

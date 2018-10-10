@@ -1,5 +1,6 @@
 ﻿import { delay } from 'redux-saga'
 import { call, put, takeEvery } from 'redux-saga/effects';
+import { sendMessage } from './eventApi';
 
 export const INCREMENT_VALUE_REQUESTED = 'INCREMENT_VALUE_REQUESTED';
 export const INCREMENT_VALUE_SUCCEEDED = 'INCREMENT_VALUE_SUCCEEDED';
@@ -29,6 +30,9 @@ export function clearValueWork() {
 
 function* incrementValueHandler(action) {
 	try {
+		sendMessage({
+			command: "INCREMENT_VALUE"
+		});
 		yield call(delay, 1000);
 		const value = yield call(incrementValueWork);
 		yield put({ type: INCREMENT_VALUE_SUCCEEDED, value: value });
@@ -39,6 +43,9 @@ function* incrementValueHandler(action) {
 
 function* decrementValueHandler(action) {
 	try {
+		sendMessage({
+			command: "DECREMENT_VALUE"
+		});
 		yield call(delay, 1000);
 		const value = yield call(decrementValueWork);
 		yield put({ type: DECREMENT_VALUE_SUCCEEDED, value: value });
@@ -49,6 +56,9 @@ function* decrementValueHandler(action) {
 
 function* clearValueHandler(action) {
 	try {
+		sendMessage({
+			command: "CLEAR_VALUE"
+		});
 		yield call(delay, 1000);
 		const value = yield call(clearValueWork);
 		yield put({ type: CLEAR_VALUE_SUCCEEDED, value: value });

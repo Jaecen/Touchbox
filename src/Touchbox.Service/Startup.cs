@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.WebSockets;
@@ -10,6 +11,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Touchbox.Service
 {
@@ -29,29 +32,75 @@ namespace Touchbox.Service
 				app.UseDeveloperExceptionPage();
 			}
 
-			app.Run(async (context) =>
-			{
-				if(!context.WebSockets.IsWebSocketRequest)
+			app
+				.UseWebSockets()
+				.Run(async (context) =>
 				{
-					context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-					return;
-				}
+					if(!context.WebSockets.IsWebSocketRequest)
+					{
+						context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+						return;
+					}
 
-				var webSocket = await context.WebSockets.AcceptWebSocketAsync();
-				await Time(context, webSocket);
-			});
+					var webSocket = await context.WebSockets.AcceptWebSocketAsync("events");
+					await ProcessCommands(context, webSocket);
+				});
 		}
 
-		public async Task Time(HttpContext context, WebSocket webSocket)
+		public async Task ProcessCommands(HttpContext context, WebSocket webSocket)
 		{
-			var receiveBuffer = new byte[1024];
+			int value = 0;
 
-			var receiveResult = await webSocket.ReceiveAsync(receiveBuffer, CancellationToken.None);
+			while(true)
+			{
+				JObject @event;
+				using(var ms = new MemoryStream())
+				{
+					WebSocketReceiveResult result;
+					var buffer = new ArraySegment<byte>(new byte[4096]);
 
-			var sendBuffer = Encoding.UTF8.GetBytes(DateTimeOffset.Now.ToString("o"));
-			await webSocket.SendAsync(sendBuffer, WebSocketMessageType.Text, true, CancellationToken.None);
+					do
+					{
+						result = await webSocket.ReceiveAsync(buffer, CancellationToken.None);
+						ms.Write(buffer.Array, buffer.Offset, result.Count);
+					}
+					while(!result.EndOfMessage && ms.Length <= 65535);
 
-			await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Bye", CancellationToken.None);
+					if(result.MessageType != WebSocketMessageType.Text)
+						break;
+
+					ms.Seek(0, SeekOrigin.Begin);
+					using(var textReader = new StreamReader(ms, Encoding.UTF8))
+					using(var jsonReader = new JsonTextReader(textReader))
+						@event = await JObject.LoadAsync(jsonReader);
+				}
+
+				var command = (string)@event["command"];
+				switch(command)
+				{
+					case "INCREMENT_VALUE":
+						value++;
+						break;
+
+					case "DECREMENT_VALUE":
+						value--;
+						break;
+
+					case "CLEAR_VALUE":
+						value = 0;
+						break;
+
+					default:
+						await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Bye", CancellationToken.None);
+						return;
+				}
+
+				var sendBuffer = Encoding.UTF8.GetBytes(JObject.FromObject(new
+				{
+					value
+				}).ToString());
+				await webSocket.SendAsync(sendBuffer, WebSocketMessageType.Text, true, CancellationToken.None);
+			};
 		}
 	}
 }
