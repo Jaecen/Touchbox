@@ -6,15 +6,16 @@ import { Provider } from 'react-redux';
 import createSagaMiddleware from 'redux-saga';
 
 import reducer from './reducers';
-import { valueSaga } from './actions';
+import valueSagaBuilder from './actions';
 
-import { init } from './eventApi';
+import EventApiClient from './EventApiClient';
 
 import './index.css';
 import App from './component/App';
 import * as serviceWorker from './serviceWorker';
 
-init('ws://localhost:18954');
+const eventApiClient = new EventApiClient('ws://localhost:18954');
+eventApiClient.connect();
 
 const sagaMiddleware = createSagaMiddleware();
 const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
@@ -23,6 +24,7 @@ const store = createStore(
 	reducer,
 	composeEnhancers(applyMiddleware(sagaMiddleware)));
 
+const valueSaga = valueSagaBuilder(eventApiClient);
 sagaMiddleware.run(valueSaga);
 
 ReactDOM.render(

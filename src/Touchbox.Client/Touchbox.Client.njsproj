@@ -52,7 +52,7 @@
     <Compile Include="src\component\App.test.js" />
     <Compile Include="src\component\Counter.js" />
     <Compile Include="src\actions.js" />
-    <Compile Include="src\eventApi.js" />
+    <Compile Include="src\EventApiClient.js" />
     <Compile Include="src\index.js" />
     <Compile Include="src\reducers.js" />
     <Compile Include="src\serviceWorker.js" />
